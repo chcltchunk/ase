@@ -136,8 +136,8 @@ class NetCDFTrajectory:
         self._set_atoms(atoms)
 
         self.types_to_numbers = None
-        if types_to_numbers:
-            self.types_to_numbers = np.array(types_to_numbers)
+        if types_to_numbers is not None:
+            self.types_to_numbers = types_to_numbers
 
         self.index_var = index_var
 
@@ -530,8 +530,12 @@ class NetCDFTrajectory:
                                           consecutive_index, exc=False)
             if self.numbers is None:
                 self.numbers = np.ones(self.n_atoms, dtype=int)
+            diff = set(self.numbers).difference(self.types_to_numbers.keys())
+            if len(diff) > 0:
+                self.types_to_numbers.update({d:d for d in diff})
             if self.types_to_numbers is not None:
-                self.numbers = self.types_to_numbers[self.numbers]
+                func = np.vectorize(self.types_to_numbers.get)
+                self.numbers = func(self.numbers)
             self.masses = atomic_masses[self.numbers]
 
             # Read positions
